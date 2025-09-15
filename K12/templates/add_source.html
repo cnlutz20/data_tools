@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Data Source</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 8px; margin-bottom: 5px; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>Add New Data Source</h1>
+    
+    <form method="POST">
+        <div class="form-group">
+            <label for="name">Name *</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="source_type">Source Type *</label>
+            <select id="source_type" name="source_type" required>
+                <option value="">Select type...</option>
+                <option value="csv">CSV</option>
+                <option value="api">API</option>
+                <option value="database">Database</option>
+                <option value="json">JSON</option>
+                <option value="excel">Excel</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="file_path">File Path</label>
+            <input type="text" id="file_path" name="file_path">
+        </div>
+        
+        <div class="form-group">
+            <label for="record_count">Record Count</label>
+            <input type="number" id="record_count" name="record_count">
+        </div>
+        
+        <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                <option value="success">Success</option>
+                <option value="failed">Failed</option>
+                <option value="partial">Partial</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="notes">Notes</label>
+            <textarea id="notes" name="notes" rows="3"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="metadata">Metadata (JSON format)</label>
+            <textarea id="metadata" name="metadata" rows="4" 
+                placeholder='{"key": "value", "another_key": "another_value"}'></textarea>
+        </div>
+        
+        <button type="submit">Add Data Source</button>
+        <a href="/" style="margin-left: 10px;">Cancel</a>
+    </form>
+</body>
+</html>
