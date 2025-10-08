@@ -1,0 +1,26 @@
+{
+	// Place your Projects workspace snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and 
+	// description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope 
+	// is left empty or omitted, the snippet gets applied to all languages. The prefix is what is 
+	// used to trigger the snippet and the body will be expanded and inserted. Possible variables are: 
+	// $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders. 
+
+	"API Imports": {
+		"scope": "python",
+		"prefix": "api-imports",
+		"body": [
+		"# Essential imports for making API requests",
+		"import requests",
+		"import json",
+		"from typing import Dict, Any, Optional",
+		"import os",
+		"from urllib.parse import urljoin, urlparse",
+		"",
+		"# Optional but commonly useful imports",
+		"import pandas as pd  # For handling response data",
+		"import time  # For rate limiting/delays",
+		"from datetime import datetime  # For timestamps"
+		],
+		"description": "Import statements for API requests"
+	}
+	}
