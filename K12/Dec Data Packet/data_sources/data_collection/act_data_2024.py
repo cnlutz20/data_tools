@@ -1,6 +1,11 @@
 # %%
 import pandas as pd
 import numpy as np
+#thi data contants
+from cprl_functions.defined_functions import *
+from cprl_functions.state_capture import *
+from cprl_functions.text_printing import bordered
+from cprl_functions.data_packet_defs import *
 
 def merge_split_state_names(df):
     df = df.copy()
@@ -41,7 +46,8 @@ import tabula
 import pandas as pd
 
 def get_act_data():
-    act_pdf = r"C:\Users\clutz\THE HUNT INSTITUTE\The Hunt Institute Team Site - Documents\Policy Team\Data Packets\k12\data\2024-Average-ACT-Scores-by-State-Percent-Meeting-Benchmarks.pdf"
+    act_pdf = r"c:\Users\clutz\THE HUNT INSTITUTE\The Hunt Institute Team Site - Documents\Policy Team\Data\Data Packets\K-12\data\2024-Average-ACT-Scores-by-State-Percent-Meeting-Benchmarks.pdf"
+    
 
     # Loop through pages with different settings
     page_configs = {
@@ -85,6 +91,10 @@ def get_act_data():
 
     df_combined = pd.concat(results, ignore_index=True)
     df_combined.columns = columns
+    df_combined['state_abrv'] = df_combined['state'].apply(lambda x: state_ref_lower.get(str(x).lower()))
+    
+    popped = df_combined.pop('state_abrv')
+    df_combined.insert(0,'state_abrv', popped)
     output = df_combined.sort_values(by='state')
     return output
 
