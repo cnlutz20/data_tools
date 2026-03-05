@@ -9,6 +9,7 @@ import glob as glob
 import tabula
 
 
+
 #thi data contants
 from cprl_functions.defined_functions import *
 from cprl_functions.state_capture import *
@@ -60,33 +61,35 @@ def read_pdf_line_by_line(sat_files):
         lines_by_state[state_abrv] = all_lines
     return lines_by_state
 
-
-
+# %% cell 
 dfs = []
 lines_by_state = read_pdf_line_by_line(sat_files)
 for k,v in lines_by_state.items():
-    # if k != 'MN':
-    #     continue
+    # if k != 'KS':
+        # continue
     print(bordered(k))
     avg = None
     percent = None
     vals = {}
     vals['state_abrv'] = [k]
     for i,element in enumerate(v):
-        need = ['SAT','Participation']
+        need = ['SAT','Participation',]
         exclude = ['Suite']
-    
+
         if all(str(x) in str(element) for x in need) and not any(str(x) in str(element) for x in exclude) and re.search(r'(graduates)?', str(element)):
+
+            print(element)
+            
             value = re.search(r'\d{1,3}%',element)
             if value is None:
                 continue
             else:
                 percent = value.group(0)
                 vals['percent'] = [percent]
-                print(value.group(0))
-        # print(element)
+                # print(value.group(0))
         if 'Total' in element and 'Mean' in element:
             # print(element)
+            
             # print(v[i+2].split(' '))
             
             value_row = [x for x in v[i+2].split(' ') if len(x)>0]
@@ -108,14 +111,19 @@ for k,v in lines_by_state.items():
             vals['avg'] = [avg]
     
     
+    
     df = pd.DataFrame(vals).reset_index(drop=True)
     dfs.append(df)
-
 
     
 df = pd.DataFrame(vals)
 all_sat_data = pd.concat(dfs).reset_index(drop=False)
-# print(all_sat_data.to_string())
+print(all_sat_data.to_string())
+# %%
+
+
+
+# %%
 def get_sat_data():
     return all_sat_data
 

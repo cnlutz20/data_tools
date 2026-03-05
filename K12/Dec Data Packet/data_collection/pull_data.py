@@ -20,11 +20,12 @@ from pathlib import Path
 
 # %% Helper functions
 
-def get_intitials(x):
+def get_intitials(x, debug = True):
     try:
         result = state_ref.get(x.strip())
     except:
-        print(f'trouble child: {x}')
+        if debug == True:
+            print(f'trouble child: {x}')
         return None
     if result is None:
         if 'national' in str(x).lower():
@@ -156,7 +157,7 @@ def ccd_counts_cleaned(**kwargs):
     debug = kwargs.get('debug', False)
     #get file and make df
     ccd_file = get_ccd_file('counts')
-    print(ccd_file)
+    # print(ccd_file)
     ccd_df = pd.read_excel(ccd_file, engine='openpyxl')
     
     ccd_df = ccd_df.iloc[1:63,:].reset_index(drop=True)
@@ -198,7 +199,7 @@ def total_enroll_data_clean():
     collected_enrollment.columns = ['state_abrv','year','total_enrollment']
     collected_enrollment['year'] = collected_enrollment['year'].str.replace(r'(\d{4})-(\d{4})', lambda m: f"{m.group(1)}-{m.group(2)[-2:]}", regex=True)
     collected_enrollment['fy'] = (pd.to_numeric(collected_enrollment['year'].str[-2:], errors='coerce')).astype('Int64')
-    # print(collected_enrollment.to_string())
+    print(collected_enrollment.to_string())
     #Identify rows NOT already in current_records
     existing_pairs = set(zip(ccd_results_total['state_abrv'], ccd_results_total['fy']))
     updated_data_filtered = collected_enrollment[~collected_enrollment.apply(lambda row: (row['state_abrv'], row['fy']) in existing_pairs, axis=1)]
@@ -235,13 +236,13 @@ def re_enroll_data_clean(total_enroll_df):
     collected_enr_re = get_collected_data(metric = 'enroll_race_ethnicity')
     collected_enr_re.columns = collected_enr_re.iloc[0,:]
     collected_enr_re = collected_enr_re.iloc[1:,:]
-    collected_enr_re.columns = [x.strip().replace('\n','_').lower().replace(' ','_').replace('/','') for x in collected_enr_re.columns]
+    collected_enr_re.columns = [str(x).strip().replace('\n','_').lower().replace(' ','_').replace('/','') for x in collected_enr_re.columns]
     collected_enr_re['asian_pacific_islander_combined'] = collected_enr_re['asian'].apply(int_or_none)+collected_enr_re['native_hawaiianpacific_islander'].apply(int_or_none)
     popping_col = collected_enr_re.pop('asian_pacific_islander_combined')
     collected_enr_re.insert(3,'asian_pacific_islander_combined', popping_col)
-    collected_enr_re = collected_enr_re.rename(columns={'asian_pacific_islander_combined':'asian_pacific_islander','updated_source_year':'year','state':'state_abrv'})
+    collected_enr_re = collected_enr_re.rename(columns={'asian_pacific_islander_combined':'asian_pacific_islander','source_year':'year','state':'state_abrv'})
 
-    collected_enr_re = collected_enr_re.drop(columns=['previous_source_link','previous_source_year','updated_source_link','asian','native_hawaiianpacific_islander'])
+    collected_enr_re = collected_enr_re.drop(columns=['previous_source_link','previous_source_year','source_link','asian','native_hawaiianpacific_islander'])
     collected_enr_re = collected_enr_re.loc[:,:'two_or_more']
     # collected_enr_re['total_enrollment'] = 
     collected_enr_re = collected_enr_re.loc[:,['state_abrv', 'year', 'american_indian_alaska_native', 'asian_pacific_islander','hispanic', 'black', 'white', 'two_or_more']]
@@ -330,10 +331,10 @@ def get_naep_data_long():
 
         if 'Reading' in str(filename):
             subject = 'reading'
-            print(f'reading from {str(filename)}')
+            # print(f'reading from {str(filename)}')
         else:
             subject = 'math'
-            print(f'math from {str(filename)}')
+            # print(f'math from {str(filename)}')
         
 
         for i,j in enumerate(df[0]):
@@ -349,7 +350,7 @@ def get_naep_data_long():
         df = df.iloc[start+1:stop,:].dropna(subset='year').reset_index()
         df['grade'] = grade
         df['subject'] = subject
-        df['state_abrv'] = df['jurisdiction'].apply(get_intitials)
+        df['state_abrv'] = df['jurisdiction'].apply(get_intitials, debug = False)
         df = df.loc[:,['state_abrv','jurisdiction', 'year','grade','subject','at_or_above_proficient']]
         dfs.append(df)
     export = pd.concat(dfs)
@@ -392,7 +393,7 @@ def get_naep_data():
         df = df.iloc[start+1:stop,:].dropna(subset='year').reset_index()
         df['grade'] = grade
         df['subject'] = subject
-        df['state_abrv'] = df['jurisdiction'].apply(get_intitials)
+        df['state_abrv'] = df['jurisdiction'].apply(get_intitials, debug=False)
         df = df.loc[:,['state_abrv','jurisdiction', 'year','grade','subject','at_or_above_proficient']]
         dfs.append(df)
     export = pd.concat(dfs)
@@ -438,8 +439,63 @@ def get_naep_workbook_data(**kwargs):
     return df
 
 
-
 # %%
+##########################
+""""locale table """
+
+
+def get_enroll_by_locale():
+    files = Path(r"C:\Users\clutz\THE HUNT INSTITUTE\The Hunt Institute Team Site - Documents\Policy Team\Data\Data Packets\K-12\data\nces").glob('*tab*203.72*')
+    # files = Path(r"C:\Users\clutz\THE HUNT INSTITUTE\The Hunt Institute Team Site - Documents\Policy Team\Data\Data Packets\K-12\data\nces").glob('*tab*203.72*')
+
+    # Convert to list to see what you have
+    files = list(files)
+
+    if len(files) >0 and len(files) <2:
+        file = files[0]
+
+
+    df = pd.read_excel(file, header=None)
+    ext_df = df.copy()
+
+    col_nums = []
+    row_list = df.loc[2, :].values.flatten().tolist()
+    for i,val in enumerate(row_list):
+        if 'total' in val.lower():
+            col_nums.append(i)
+        
+
+    # print(col_nums)
+
+    # print(f'before {'\n'}{ext_df.head().to_string()}')
+    ext_df = ext_df.iloc[:,[0]+col_nums]
+    ext_df.columns = [x.strip().lower().replace("1",'').replace('\\', '') for x in ext_df.iloc[1]]
+    ext_df = ext_df.iloc[4:,:].reset_index(drop=True)
+    return ext_df
+
+def clean_enroll_by_locale():
+    locale_data = get_enroll_by_locale()
+    locale_data['state'] = locale_data['state'].str.replace('\xa0', '').str.strip()
+    locale_data['state_abrv'] = locale_data['state'].apply(lambda x: get_state_abrv_from_lower(x))
+    for row in locale_data.itertuples(index = True):
+        print(row.state.lower())
+        if 'wyoming' in str(row.state.lower()):
+            # print(row)
+            end = row.Index
+            break
+    popped = locale_data.pop('state_abrv')
+    locale_data.insert(0,'state_abrv',popped)
+    locale_data = locale_data.iloc[:end+1, :]
+    
+    num_cols = ['total', 'city', 'suburban', 'town', 'rural']
+    cats = ['city', 'suburban', 'town', 'rural']
+    locale_data[num_cols] = locale_data[num_cols].apply(pd.to_numeric,errors='coerce')
+    for cat in cats:
+        locale_data[cat] = locale_data[cat]/locale_data['total']
+    
+    return locale_data
+
+# %% 
 ##########################
 """Perkins Data"""
 def get_cte_data():
@@ -542,9 +598,15 @@ def get_clean_23_enrollment(input_file):
     output_df = output_df[['state_abbr', 'state_name'] + cols]
 
     #combine for asian/pacific islander
+    output_df['asian_or_asian/pacific_islander_students'] = pd.to_numeric(output_df['asian_or_asian/pacific_islander_students'], errors = 'coerce')
+    output_df['nat_hawaiian_or_other_pacific_isl_students'] = pd.to_numeric(output_df['nat_hawaiian_or_other_pacific_isl_students'], errors = 'coerce')
+    output_df['asian_or_asian/pacific_islander_students'] = output_df['asian_or_asian/pacific_islander_students'].fillna(0)
+    output_df['nat_hawaiian_or_other_pacific_isl_students'] = output_df['nat_hawaiian_or_other_pacific_isl_students'].fillna(0)
+
+
     output_df['asian/pacific_islander'] = output_df['asian_or_asian/pacific_islander_students']+output_df['nat_hawaiian_or_other_pacific_isl_students']
     output_df = output_df.drop(columns=['asian_or_asian/pacific_islander_students','nat_hawaiian_or_other_pacific_isl_students'])
-
+    
     #rename total column and drop merged cols
     output_df = output_df.rename(columns={'grand_total':'total'})
     # print('current cols:')
@@ -578,9 +640,9 @@ def clean_cte_data():
     df['asian'] = pd.to_numeric(df['asian'], errors='coerce')
 
     df['asian/pacific_islander'] = df['native_hawaiian_or_other_pacific_islander']+df['asian']
-    # print(df.columns.to_list())
 
     df = df.drop(columns=['native_hawaiian_or_other_pacific_islander','asian'])
+    # print(df.columns.to_list())
 
     column_names = ['state_abrv', 'state', 'total', 'nat_am_or_ak', 'black', 'hispanic','white', 'two_or_more','asian_pacific_islander']
     df.columns = column_names
@@ -592,11 +654,10 @@ def cte_calculated():
     cte_data = clean_cte_data()
 
 
-    cte_enrollment_23_file = r'c:\Users\clutz\THE HUNT INSTITUTE\The Hunt Institute Team Site - Documents\Policy Team\Data\Data Packets\K-12\data\perkins\ELSI_csv_export_6389613776445034225316.csv'
+    cte_enrollment_23_file = r"C:\Users\clutz\THE HUNT INSTITUTE\The Hunt Institute Team Site - Documents\Policy Team\Data\Data Packets\K-12\data\perkins\enroll_22-23_cte_supp.csv"
     enrollment_data = get_clean_23_enrollment(cte_enrollment_23_file)
     # print(enrollment_data.to_string())
     # dfs = {'cte':cte_data,'enrollment':enrollment_data}
-
 
 
     concat_dfs = []
@@ -618,7 +679,7 @@ def cte_calculated():
             for col_name, value in row_dict.items():
                 # print(f'value: {value}')
                 skip = ['Index','total', 'state', 'state_abrv']
-                
+                # print(col_name)
 
                 if any(elem in col_name for elem in skip):
                     continue
@@ -646,16 +707,20 @@ def cte_calculated():
                     
                     
                     # by enrollment
-                    enroll_denom = enrollment_data[enrollment_data['state_abrv']==state].reset_index(drop=True)
-                    # print(enroll_denom)
-                    denominator = enroll_denom.loc[0,col_name]
+                    
+                    enroll_res = enrollment_data[enrollment_data['state_abrv']==state].reset_index(drop=True)
+                    
+                    # print(enroll_res.to_string(max_colwidth=30))
+                    nominator = enroll_res.loc[0,col_name]
+                    denominator = enroll_res.loc[0,'total']
+
                     if isinstance(denominator, float) and 'nan' in str(denominator).lower():
                         # print('the enrollment is na for this state')
                         perc_o_enr = 'N/A'
-                    elif isinstance(value, float) and 'nan' in str(value).lower():
+                    elif isinstance(nominator, float) and 'nan' in str(nominator).lower():
                         perc_o_enr = 'N/A'
                     else:
-                        perc_o_enr = int(value)/int(denominator)
+                        perc_o_enr = int(nominator)/int(denominator)
                         # print(f'enrollment denominator: {denominator}')
                         # print("perc_o_enr:{0:.2%}".format(perc_o_enr))
 
@@ -673,10 +738,10 @@ def cte_calculated():
 # %%
 ###########################
 ## SAT data
-def get_sat_graph_data():
+def get_ap_graph_data():
     sat_dir = r"c:\Users\clutz\THE HUNT INSTITUTE\The Hunt Institute Team Site - Documents\Policy Team\Data\Data Packets\K-12\data\college board\ap data\school-report-of-ap-exams-grades-11-12-2023-2024.xlsx"
     
-
+    
     excel_file = pd.ExcelFile(sat_dir)
     df = excel_file.parse(sheet_name='cleaned')
     columns = ['state_abrv','state', '11_12_enrollment','total_ap_stu','total_ap_exams', 'ap_exams_per_k_11_12', 'perc_3_orbetter']

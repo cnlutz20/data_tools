@@ -1,0 +1,11 @@
+{
+  "save_it": true,
+  "show_it": true,
+  "just_one": false,
+  "subset_state": "CA",
+  "subset_states": [
+    "FL",
+    "UT",
+    "WI"
+  ]
+}
